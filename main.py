@@ -10,12 +10,7 @@ URLs = [
 
 online_url = helpers.getUrl(URLs)
 
-data = helpers.getHtml(online_url)
-
-href = helpers.getHref(data,online_url)
-
-print(href)
-
-helpers.download(href)
-
+helpers.upydate(["https://antivirus.uclv.cu/clamav/"])
+print("Completado!")
+helpers.getCol()
 
