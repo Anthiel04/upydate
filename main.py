@@ -10,7 +10,7 @@ URLs = [
 
 online_url = helpers.getUrl(URLs)
 
-helpers.upydate(["https://antivirus.uclv.cu/clamav/"])
+helpers.upydate([online_url])
 print("Completado!")
 helpers.getCol()
 

@@ -2,96 +2,155 @@ import requests
 from bs4 import BeautifulSoup
 import re
 
+exceptions = [
+    "https://ayuda.uclv.edu.cu",
+    "Parent Directory",
+    "",
+    "=",
+    "?C=N;O=D",
+    "?C=M;O=A",
+    "?C=S;O=A",
+]
 
-exceptions = ['https://ayuda.uclv.edu.cu',"Parent Directory",'','=', "?C=N;O=D", "?C=M;O=A","?C=S;O=A"]
-filetypes = ['.rar', '.exe',".cvd"]
+filetypes = [".rar", ".exe", ".cvd"]
+
 collection = []
+
+
+# Pending
+
+
+def sliceUrl(url):
+    regex = r"/([^/]+)(?:/)?$"  # Expresión regular para capturar el último segmento de una URL
+    match = re.search(regex, url)
+
+    if match:
+        return match.group(1)
+    else:
+        return ""
+
+
+# Determina si es una tag o una url
+
+
+def getType(url):
+    tipo = type(url)
+    print(type)
+    if tipo == "Tag":
+        return [url.get("href"), url.text]
+    elif tipo == str:
+        return [url, sliceUrl(url)]
+
 
 # Obtiene los links de descarga
 # OK
+
+
 def getCol():
     for i in range(len(collection)):
         print(i)
 
-# Si el servidor responde con 200 se trabaja con ese enlace 
+
+# Si el servidor responde con 200 se trabaja con ese enlace
 # OK
-def getUrl(url = []):
+
+
+def getUrl(url):
     for i in range(len(url)):
         try:
             link = url[i]
             print("Conectando con: " + link)
             print()
-            
-            if 200 == requests.get(link).status_code:
+
+            response = requests.get(link, timeout=5)
+            response.raise_for_status()
+
+            # print(response.status_code)
+            # print()
+
+            if 200 == response.status_code:
                 print(link + " esta online")
                 print()
                 return link
-            elif 200 != requests.get(link).status_code:
-                print("""
-                      
-                      
-                      Conexion rechazada
-                      
-                      Verifique VPN
-                      
-                      
-                      """)
-        except:
-            print("No se pudo establecer la conexion con: " + link)
+            else:
+                print(
+                    """
+                
+                Conexion rechazada
+                
+                Es posible que el sitio este en clases,
+                checar VPN  
+                            
+                """
+                )
+        except requests.exceptions.RequestException as e:
+            print(
+                "No se pudo establecer la conexion con: "
+                + link
+                + """
+
+        Posiblemente este el servidor apagado
+
+"""
+            )
+            print()
             continue
-        else:
-            return link
-        
-    print("""
+
+    print(
+        """
+        No se pudo establecer conexion con ningun servidor
           
-          No se pudo establecer conexion con ningun servidor
-          
-          
-          Tip:
+        Tip:
             Mudate
           
-          """)
+          """
+    )
     exit()
-        
+
+
 # Obtiene el HTML de la URL
 # OK
+
+
 def getHtml(online):
-    if type(online) == str:
-        request = requests.get(online)    
-    else: 
-        request = requests.get(online.get('href'))
+    url, name = getType(online)
+    request = requests.get(url)
     html = request.text
-    soup_data = BeautifulSoup(html, 'html.parser')
+    soup_data = BeautifulSoup(html, "html.parser")
     return soup_data
+
 
 # Obtiene el url de las <a> y se deshace de los no validos
 # Optimizar, ajustar y la madre de los tomates
-def getHref(html,actual_url):
+
+
+def getHref(html, actual_url):
 
     href = []
     links = html.find_all("a")
 
-    for i in range(len(links)):
+    actual, name = getType(actual_url)
 
+    for i in range(len(links)):
         link = links[i]
 
         try:
-        # Verificar si la URL contiene alguna de las excepciones
+            # Verificar si la URL contiene alguna de las excepciones
             for excepcion in exceptions:
-                if re.search(excepcion, link.get('href')):
-                    continue                
+                if re.search(excepcion, link.get("href")):
+                    continue
         except:
             depinga = 0
-            
+
         # Si el enlace se encuentra en la lista de excepciones se ignora
         # Si el enlace no contiene barras ignorarlo
-        if(link.get("href") in exceptions or link in href or link.text in exceptions ):
+        if link.get("href") in exceptions or link in href or link.text in exceptions:
             continue
-        
+
         # Si el enlace contiene al menos una barra completar enlace con la base
-        elif(link.get("href").count('/') < 2):
-            temp = actual_url + link.get('href')
-            link['href'] = temp
+        elif link.get("href").count("/") < 2:
+            temp = actual + link.get("href")
+            link["href"] = temp
             href.append(link)
 
         # Si el enlace contiene mas de 2 barras guardarlo
@@ -100,14 +159,16 @@ def getHref(html,actual_url):
     print(href)
     return href
 
+
 # Descarga el contenido del URL
 # OK
+
+
 def download(href):
-    
-    url, nombre = href.get("href"), href.text
-    
+
+    url, nombre = getType(href)
     collection.append(url)
-                    
+
     print("Descargando...")
 
     with open("./Updates/" + nombre, "wb") as file:
@@ -115,38 +176,27 @@ def download(href):
         file.write(response.content)
 
     print("Descargado!!!")
-       
-def upydate(online_url = [], count = 0):
-    
+
+
+def upydate(online_url=[], count=0):
+
     if not online_url:
         return
-    
-    try:
 
-        if count <= 0:
-            mime_type = 'HTML'
-            actual = online_url[0]
-        
-        else:
-            mime_type = online_url[0].text
-            actual = online_url[0].get('href')
-        
+    try:
+        actual, mime_type = getType(online_url[0])
         print(mime_type)
 
-        if "HTML" in mime_type:
+        if ".rar" in mime_type or ".exe" in mime_type or ".cvd" in mime_type:
+            download(online_url[0])
+        else:
             # print("HTML!!")
             html = getHtml(actual)
-            tag_objects = getHref(html,actual)
+            tag_objects = getHref(html, actual)
             upydate(tag_objects)
-        elif "rar" in mime_type or "exe" in mime_type or 'cvd' in mime_type:
-            download(online_url[0])
-            
-        """ else:
-            print("La URL: " + actual + " contiene otro tipo de contenido: " + mime_type)
- """
     except requests.exceptions.RequestException as e:
         # Manejar cualquier excepción de solicitud
-        print("Error al verificar la URL" + actual)
+        print("Error al verificar la URL " + actual)
 
     # Llamar recursivamente a la función con el resto de las URLs
     upydate(online_url[1:], count + 1)
