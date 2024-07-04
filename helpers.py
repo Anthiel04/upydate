@@ -10,7 +10,8 @@ collection = []
 # Obtiene los links de descarga
 # OK
 def getCol():
-    print(collection)
+    for i in range(len(collection)):
+        print(i)
 
 # Si el servidor responde con 200 se trabaja con ese enlace 
 # OK
