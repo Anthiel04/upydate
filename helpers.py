@@ -5,21 +5,19 @@ import re
 exceptions = [
     "https://ayuda.uclv.edu.cu",
     "Parent Directory",
-    "",
-    "=",
+    "http://browsehappy.com",
+    "https://larsjung.de/h5ai/",
     "?C=N;O=D",
     "?C=M;O=A",
     "?C=S;O=A",
+    "/..",
+    "..",
 ]
 
 filetypes = [".rar", ".exe", ".cvd"]
 
-collection = []
-
 
 # Pending
-
-
 def sliceUrl(url):
     regex = r"/([^/]+)(?:/)?$"  # Expresión regular para capturar el último segmento de una URL
     match = re.search(regex, url)
@@ -31,30 +29,16 @@ def sliceUrl(url):
 
 
 # Determina si es una tag o una url
-
-
 def getType(url):
     tipo = type(url)
-    print(type)
-    if tipo == "Tag":
-        return [url.get("href"), url.text]
-    elif tipo == str:
+    if tipo == str:
         return [url, sliceUrl(url)]
-
-
-# Obtiene los links de descarga
-# OK
-
-
-def getCol():
-    for i in range(len(collection)):
-        print(i)
+    else:
+        return [url.get("href"), url.text]
 
 
 # Si el servidor responde con 200 se trabaja con ese enlace
 # OK
-
-
 def getUrl(url):
     for i in range(len(url)):
         try:
@@ -98,20 +82,17 @@ def getUrl(url):
 
     print(
         """
-        No se pudo establecer conexion con ningun servidor
-          
+    No se pudo establecer conexion con ningun servidor       
         Tip:
             Mudate
-          
-          """
+
+"""
     )
     exit()
 
 
 # Obtiene el HTML de la URL
 # OK
-
-
 def getHtml(online):
     url, name = getType(online)
     request = requests.get(url)
@@ -122,52 +103,36 @@ def getHtml(online):
 
 # Obtiene el url de las <a> y se deshace de los no validos
 # Optimizar, ajustar y la madre de los tomates
-
-
 def getHref(html, actual_url):
 
     href = []
     links = html.find_all("a")
 
-    actual, name = getType(actual_url)
-
     for i in range(len(links)):
-        link = links[i]
-
-        try:
-            # Verificar si la URL contiene alguna de las excepciones
-            for excepcion in exceptions:
-                if re.search(excepcion, link.get("href")):
-                    continue
-        except:
-            depinga = 0
+        link = links[i].get("href")
 
         # Si el enlace se encuentra en la lista de excepciones se ignora
         # Si el enlace no contiene barras ignorarlo
-        if link.get("href") in exceptions or link in href or link.text in exceptions:
+        if link in exceptions or links[i].text in exceptions or links[i] in href:
             continue
 
-        # Si el enlace contiene al menos una barra completar enlace con la base
-        elif link.get("href").count("/") < 2:
-            temp = actual + link.get("href")
-            link["href"] = temp
-            href.append(link)
-
-        # Si el enlace contiene mas de 2 barras guardarlo
-        else:
-            href.append(link)
+            # Si el enlace no contiene http completar con la base
+        elif "http" not in link:
+            if link[0] == "/":
+                link = link[1:]
+            temp = actual_url + link
+            link = temp
+        links[i]["href"] = link
+        href.append(links[i])
     print(href)
     return href
 
 
 # Descarga el contenido del URL
 # OK
-
-
 def download(href):
 
     url, nombre = getType(href)
-    collection.append(url)
 
     print("Descargando...")
 
@@ -193,6 +158,7 @@ def upydate(online_url=[], count=0):
             # print("HTML!!")
             html = getHtml(actual)
             tag_objects = getHref(html, actual)
+            print(tag_objects)
             upydate(tag_objects)
     except requests.exceptions.RequestException as e:
         # Manejar cualquier excepción de solicitud
