@@ -1,6 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+import os
+import time
+from tqdm import tqdm
 
 exceptions = [
     "https://ayuda.uclv.edu.cu",
@@ -12,10 +15,18 @@ exceptions = [
     "?C=S;O=A",
     "/..",
     "..",
+    ''
 ]
 
 filetypes = [".rar", ".exe", ".cvd"]
 
+# Reintenta cada 10 min 6 veces 
+def connect(URLs):
+    for i in range(6):
+        online_url = getUrl(URLs)
+        if online_url != '':
+            return online_url
+        time.sleep(600)
 
 # Pending
 def sliceUrl(url):
@@ -134,14 +145,24 @@ def download(href):
 
     url, nombre = getType(href)
 
-    print("Descargando...")
+    print("Descargando " + nombre + " ...")
 
-    with open("./Updates/" + nombre, "wb") as file:
-        response = requests.get(url)
-        file.write(response.content)
+    directory = "./Updates/"
 
-    print("Descargado!!!")
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    
+    response = requests.get(url, stream=True)
+    total_size = int(response.headers.get('content-length', 0))
+    block_size = 1024
+    with tqdm(total=total_size, unit='iB', unit_scale=True) as progress_bar:
+        with open(directory + nombre, "wb") as file:
+            for chunk in response.iter_content(chunk_size=block_size):
+                if chunk:
+                    file.write(chunk)
+                    progress_bar.update(len(chunk))
 
+    print(nombre + " descargado!!!")
 
 def upydate(online_url=[], count=0):
 
@@ -158,7 +179,6 @@ def upydate(online_url=[], count=0):
             # print("HTML!!")
             html = getHtml(actual)
             tag_objects = getHref(html, actual)
-            print(tag_objects)
             upydate(tag_objects)
     except requests.exceptions.RequestException as e:
         # Manejar cualquier excepción de solicitud

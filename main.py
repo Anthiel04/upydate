@@ -1,4 +1,5 @@
 import helpers
+import time
 
 # import os
 # import config
@@ -12,7 +13,7 @@ URLs = [
     "http://antivirus.uij.edu.cu/",
 ]
 
-online_url = helpers.getUrl(URLs)
+online_url = helpers.connect(URLs)
 
 helpers.upydate([online_url])
 print("Completado!")
