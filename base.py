@@ -1,0 +1,101 @@
+import helpers
+import requests
+from bs4 import BeautifulSoup
+import re
+import os
+import time
+from tqdm import tqdm
+
+
+class Base:
+    def __init__(self, url):
+        self.url = url
+        self.exceptions = [
+            "https://ayuda.uclv.edu.cu",
+            "Parent Directory",
+            "http://browsehappy.com",
+            "https://larsjung.de/h5ai/",
+            "?C=N;O=D",
+            "?C=M;O=A",
+            "?C=S;O=A",
+            "/..",
+            "..",
+            "",
+        ]
+
+    def add_exception(self, exception):
+        self.exceptions.append(exception)
+
+    def get(self, var):
+        if hasattr(self, var):
+            return getattr(self, var)
+        else:
+            return None
+
+    def set(self, var, value):
+        if hasattr(self, var):
+            setattr(self, var, value)
+        else:
+            print("La propiedad " + var + " no existe en la clase Persona.")
+
+    def verify(self):
+        url = self.url
+        try:
+            link = url
+            print("Conectando con: ")
+            print(link)
+            response = requests.get(link, timeout=5)
+            response.raise_for_status()
+            print("Status: ")
+            print(response.status_code)
+            if 200 == response.status_code:
+                print()
+                return bool(1)
+            else:
+                print(
+                    """
+            
+            Conexion rechazada
+            
+            Es posible que el sitio este en clases,
+            checar VPN  
+                        
+            """
+                )
+                return bool(0)
+        except requests.exceptions.RequestException as e:
+            print(
+                "\n No se pudo establecer la conexion con: "
+                + link
+                + """
+
+        Posiblemente este el servidor apagado
+
+"""
+            )
+            print()
+            return bool(0)
+
+    # Pending
+    def sliceUrl(self, url):
+        regex = r"/([^/]+)(?:/)?$"  # Expresión regular para capturar el último segmento de una URL
+        match = re.search(regex, url)
+
+        if match:
+            return match.group(1)
+        else:
+            return ""
+
+    def getType(self, url):
+        tipo = type(url)
+        if tipo == str:
+            return [url, self.sliceUrl(url)]
+        else:
+            return [url.get("href"), url.text]
+
+    def getHtml(self, online):
+        url, name = self.getType(online)
+        request = requests.get(url)
+        html = request.text
+        soup_data = BeautifulSoup(html, "html.parser")
+        return soup_data

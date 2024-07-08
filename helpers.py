@@ -15,18 +15,20 @@ exceptions = [
     "?C=S;O=A",
     "/..",
     "..",
-    ''
+    "",
 ]
 
 filetypes = [".rar", ".exe", ".cvd"]
 
-# Reintenta cada 10 min 6 veces 
+
+# Reintenta cada 10 min 6 veces
 def connect(URLs):
     for i in range(6):
         online_url = getUrl(URLs)
-        if online_url != '':
+        if online_url != "":
             return online_url
         time.sleep(600)
+
 
 # Pending
 def sliceUrl(url):
@@ -113,7 +115,6 @@ def getHtml(online):
 
 
 # Obtiene el url de las <a> y se deshace de los no validos
-# Optimizar, ajustar y la madre de los tomates
 def getHref(html, actual_url):
 
     href = []
@@ -127,7 +128,7 @@ def getHref(html, actual_url):
         if link in exceptions or links[i].text in exceptions or links[i] in href:
             continue
 
-            # Si el enlace no contiene http completar con la base
+        # Si el enlace no contiene http completar con la base
         elif "http" not in link:
             if link[0] == "/":
                 link = link[1:]
@@ -151,11 +152,11 @@ def download(href):
 
     if not os.path.exists(directory):
         os.makedirs(directory)
-    
+
     response = requests.get(url, stream=True)
-    total_size = int(response.headers.get('content-length', 0))
+    total_size = int(response.headers.get("content-length", 0))
     block_size = 1024
-    with tqdm(total=total_size, unit='iB', unit_scale=True) as progress_bar:
+    with tqdm(total=total_size, unit="iB", unit_scale=True) as progress_bar:
         with open(directory + nombre, "wb") as file:
             for chunk in response.iter_content(chunk_size=block_size):
                 if chunk:
@@ -163,6 +164,7 @@ def download(href):
                     progress_bar.update(len(chunk))
 
     print(nombre + " descargado!!!")
+
 
 def upydate(online_url=[], count=0):
 
