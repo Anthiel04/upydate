@@ -1,10 +1,8 @@
-import helpers
 import requests
 from bs4 import BeautifulSoup
 import re
-import os
-import time
 from tqdm import tqdm
+import os
 
 
 class Base:
@@ -30,7 +28,7 @@ class Base:
         if hasattr(self, var):
             return getattr(self, var)
         else:
-            return None
+            return 0
 
     def set(self, var, value):
         if hasattr(self, var):
@@ -50,7 +48,7 @@ class Base:
             print(response.status_code)
             if 200 == response.status_code:
                 print()
-                return bool(1)
+                return True
             else:
                 print(
                     """
@@ -62,7 +60,7 @@ class Base:
                         
             """
                 )
-                return bool(0)
+                return False
         except requests.exceptions.RequestException as e:
             print(
                 "\n No se pudo establecer la conexion con: "
@@ -74,7 +72,7 @@ class Base:
 """
             )
             print()
-            return bool(0)
+            return False
 
     # Pending
     def sliceUrl(self, url):
@@ -99,3 +97,26 @@ class Base:
         html = request.text
         soup_data = BeautifulSoup(html, "html.parser")
         return soup_data
+
+    def download(self, href):
+
+        url, nombre = self.getType(href)
+
+        print("Descargando " + nombre + " ...")
+
+        directory = "./Updates/"
+
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        response = requests.get(url, stream=True)
+        total_size = int(response.headers.get("content-length", 0))
+        block_size = 1024
+        with tqdm(total=total_size, unit="iB", unit_scale=True) as progress_bar:
+            with open(directory + nombre, "wb") as file:
+                for chunk in response.iter_content(chunk_size=block_size):
+                    if chunk:
+                        file.write(chunk)
+                        progress_bar.update(len(chunk))
+
+        print(nombre + " descargado!!!")
