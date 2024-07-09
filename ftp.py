@@ -21,7 +21,12 @@ class FTP(base.Base):
 
         try:
             actual, mime_type = self.getType(online_url[0])
-            if ".rar" in mime_type or ".exe" in mime_type or ".cvd" in mime_type:
+            if (
+                ".zip" in mime_type
+                or ".rar" in mime_type
+                or ".exe" in mime_type
+                or ".cvd" in mime_type
+            ):
                 self.direct_links.update({mime_type: lambda: self.download(actual)})
                 return 0
             else:

@@ -8,6 +8,12 @@ class UCLV(base.Base):
         super().__init__(url)
         self.filetypes = [".rar", ".exe", ".cvd"]
         self.status = self.verify()
+        self.html_exception = [
+            "https://antivirus.uclv.cu/bitdefender/",
+            "https://antivirus.uclv.cu/kaspersky/",
+            "https://antivirus.uclv.cu/wdefender/",
+            "https://antivirus.uclv.cu/segurmatica/",
+        ]
         if self.status == True:
             print(self.url + " => Online ")
             self.direct_links = {}
@@ -21,7 +27,12 @@ class UCLV(base.Base):
 
         try:
             actual, mime_type = self.getType(online_url[0])
-            if ".rar" in mime_type or ".exe" in mime_type or ".cvd" in mime_type:
+            if (
+                ".zip" in mime_type
+                or ".rar" in mime_type
+                or ".exe" in mime_type
+                or ".cvd" in mime_type
+            ):
                 print(actual)
                 self.direct_links.update({mime_type: lambda: self.download(actual)})
                 return 0
