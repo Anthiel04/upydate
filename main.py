@@ -1,7 +1,6 @@
 from uclv import UCLV
 from ftp import FTP
 from uij import UIJ
-import simplemenu
 
 # import os
 # import config
@@ -9,7 +8,6 @@ import simplemenu
 # config.load()
 
 # Enlaces de las actualizaciones
-default = 0
 
 villa_clara = UCLV("https://antivirus.uclv.cu/")
 provincia = FTP("http://ftp.uo.edu.cu/Antivirus/")
@@ -22,4 +20,5 @@ URLs = [
 ]
 
 
+print(villa_clara.direct_links)
 print(villa_clara.direct_links)
