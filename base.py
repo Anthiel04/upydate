@@ -19,6 +19,9 @@ class Base:
             "/..",
             "..",
             "",
+            "Description",
+            "Name",
+            "mailto"
         ]
 
     def add_exception(self, exception):
@@ -120,3 +123,31 @@ class Base:
                         progress_bar.update(len(chunk))
 
         print(nombre + " descargado!!!")
+
+    def upydate(self, online_url=[]):
+        if not online_url:
+            return
+        print(online_url[0])
+        try:
+            actual, mime_type = self.getType(online_url[0])
+            if (
+                ".zip" in mime_type
+                or ".rar" in mime_type
+                or ".exe" in mime_type
+                or ".cvd" in mime_type
+            ):
+                print(actual)
+                self.direct_links.update({mime_type: lambda: self.download(actual)})
+            elif actual in self.exceptions:
+                return
+            else:
+                html = self.getHtml(actual)
+                tag_objects = self.getHref(html,actual)
+                self.upydate(tag_objects)
+        except requests.exceptions.RequestException as e:
+            # Manejar cualquier excepción de solicitud
+            print("Error al verificar la URL " + actual)
+
+        # Llamar recursivamente a la función con el resto de las URLs
+        self.upydate(online_url[1:])
+

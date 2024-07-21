@@ -1,10 +1,17 @@
 import base
 
-class FTP(base.Base):
+class Cultura(base.Base):
     def __init__(self, url):
         super().__init__(url)
         self.filetypes = [".rar", ".exe", ".cvd"]
         self.status = self.verify()
+        self.exceptions.extend([
+            "mailto:admin@baibrama.cult.cu",
+            "Description",
+            "Name",
+            "mailto",
+            "Réplicas"
+        ])
         if self.status == True:
             print(self.url + " => Online ")
             self.direct_links = {}
@@ -13,7 +20,7 @@ class FTP(base.Base):
             self.direct_links = "Offline"
 
     # Obtiene el url de las <a> y se deshace de los no validos
-    def getHref(self, html, actual):
+    def getHref(self, html, url):
 
         href = []
         links = html.find_all("a")
@@ -32,7 +39,9 @@ class FTP(base.Base):
 
             # Si el enlace no contiene http completar con la base
             elif "http" not in link:
-                temp = "http://ftp.uo.edu.cu" + link
+                if link[0] == "/":
+                    link = link[1:]
+                temp = url + link
                 link = temp
             links[i]["href"] = link
             href.append(links[i])

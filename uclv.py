@@ -1,51 +1,22 @@
 import base
-import requests
-from bs4 import BeautifulSoup
-
 
 class UCLV(base.Base):
     def __init__(self, url):
         super().__init__(url)
         self.filetypes = [".rar", ".exe", ".cvd"]
         self.status = self.verify()
-        self.html_exception = [
+        self.exceptions.extend([
             "https://antivirus.uclv.cu/bitdefender/",
             "https://antivirus.uclv.cu/kaspersky/",
             "https://antivirus.uclv.cu/wdefender/",
             "https://antivirus.uclv.cu/segurmatica/",
-        ]
+        ])
         if self.status == True:
             print(self.url + " => Online ")
             self.direct_links = {}
             self.upydate([self.url])
         else:
             self.direct_links = "Offline"
-
-    def upydate(self, online_url=[]):
-        if not online_url:
-            return
-
-        try:
-            actual, mime_type = self.getType(online_url[0])
-            if (
-                ".zip" in mime_type
-                or ".rar" in mime_type
-                or ".exe" in mime_type
-                or ".cvd" in mime_type
-            ):
-                print(actual)
-                self.direct_links.update({mime_type: lambda: self.download(actual)})
-                return 0
-            else:
-                html = self.getHtml(actual)
-                tag_objects = self.getHref(html, actual)
-                self.upydate(tag_objects)
-        except requests.exceptions.RequestException as e:
-            # Manejar cualquier excepción de solicitud
-            print("Error al verificar la URL " + actual)
-
-        # Llamar recursivamente a la función con el resto de las URLs
-        self.upydate(online_url[1:])
 
     # Obtiene el url de las <a> y se deshace de los no validos
     def getHref(self, html, url):

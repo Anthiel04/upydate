@@ -1,7 +1,4 @@
 import base
-import requests
-from bs4 import BeautifulSoup
-
 
 # Check!!!!!!!!!!!!
 class UIJ(base.Base):
@@ -16,33 +13,8 @@ class UIJ(base.Base):
         else:
             self.direct_links = "Offline"
 
-    def upydate(self, online_url=[]):
-        if not online_url:
-            return
-
-        try:
-            actual, mime_type = self.getType(online_url[0])
-            if (
-                ".zip" in mime_type
-                or ".rar" in mime_type
-                or ".exe" in mime_type
-                or ".cvd" in mime_type
-            ):
-                self.direct_links.update({mime_type: lambda: self.download(actual)})
-                return 0
-            else:
-                html = self.getHtml(actual)
-                tag_objects = self.getHref(html)
-                self.upydate(tag_objects)
-        except requests.exceptions.RequestException as e:
-            # Manejar cualquier excepción de solicitud
-            print("Error al verificar la URL " + actual)
-
-        # Llamar recursivamente a la función con el resto de las URLs
-        self.upydate(online_url[1:])
-
     # Obtiene el url de las <a> y se deshace de los no validos
-    def getHref(self, html):
+    def getHref(self, html, actual):
 
         href = []
         links = html.find_all("a")
