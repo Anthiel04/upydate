@@ -102,27 +102,46 @@ class Base:
         return soup_data
 
     def download(self, href):
+        # Desestructurando el enlace en nombre de archivo y url
+        url, archivo = self.getType(href)
 
-        url, nombre = self.getType(href)
+        print("Descargando " + archivo + " ...")
 
-        print("Descargando " + nombre + " ...")
-
+        # Directorio de descargas, si no existe se crea
         directory = "./Updates/"
-
         if not os.path.exists(directory):
             os.makedirs(directory)
+        resume_header = {}
 
-        response = requests.get(url, stream=True)
-        total_size = int(response.headers.get("content-length", 0))
+        # Comprobando que el archivo a descargar existe para reanudar la descarga
+        file_path = os.path.join(directory, archivo)
         block_size = 1024
-        with tqdm(total=total_size, unit="iB", unit_scale=True) as progress_bar:
-            with open(directory + nombre, "wb") as file:
-                for chunk in response.iter_content(chunk_size=block_size):
-                    if chunk:
+
+        if os.path.exists(file_path):
+            resume_header['Range'] = f'bytes={os.path.getsize(file_path)}-'
+            print("Reanudando...")
+            response = requests.get(url, headers=resume_header, stream=True)
+            total_size = int(response.headers.get("content-length", 0)) + os.path.getsize(file_path)
+            with tqdm(total=total_size, initial=os.path.getsize(file_path), unit="iB", unit_scale=True) as progress_bar:
+                mode = 'ab' if os.path.exists(directory+archivo) else 'wb'  # Append o Write
+                with open(file_path, "ab") as file:
+                    for chunk in response.iter_content(chunk_size=block_size):
                         file.write(chunk)
                         progress_bar.update(len(chunk))
 
-        print(nombre + " descargado!!!")
+            print(archivo + " descargado!!!")
+            return
+
+        response = requests.get(url, stream=True)
+        total_size = int(response.headers.get("content-length", 0))
+        with tqdm(total=total_size, unit="iB", unit_scale=True) as progress_bar:
+            with open(file_path, "wb") as file:
+                for chunk in response.iter_content(chunk_size=block_size):
+                    file.write(chunk)
+                    progress_bar.update(len(chunk))
+
+        print(archivo + " descargado!!!")
+        return
 
     def upydate(self, online_url=[]):
         if not online_url:
