@@ -6,16 +6,18 @@ from cultura import Cultura
 # Enlaces de las actualizaciones
 
 villa_clara = UCLV("https://antivirus.uclv.cu/")
-""" provincia = FTP("http://ftp.uo.edu.cu/Antivirus/")
-uci_o_cujae_nise = UIJ("http://antivirus.uij.edu.cu/") """
-""" cultura = Cultura("http://ftp.baibrama.cult.cu/Antivirus/Actualizaciones/") """
+provincia = FTP("http://ftp.uo.edu.cu/Antivirus/")
+uci_o_cujae_nise = UIJ("http://antivirus.uij.edu.cu/")
+cultura = Cultura("http://ftp.baibrama.cult.cu/Antivirus/Actualizaciones/")
 
-""" URLs = [
+URLs = [
     villa_clara,
     provincia,
     uci_o_cujae_nise,
     cultura
-] """
+]
 
-print(villa_clara.direct_links)
-villa_clara.direct_links["aviupd.exe"]()
+for i in range(len(URLs)):
+    print(URLs[i].direct_links)
+# print(villa_clara.direct_links)
+# villa_clara.direct_links["aviupd.exe"]()

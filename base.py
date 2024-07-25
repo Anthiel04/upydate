@@ -21,7 +21,9 @@ class Base:
             "",
             "Description",
             "Name",
-            "mailto"
+            "mailto",
+            "http://ftp.ipirbv.rimed.cu/proyectos/httpdirindex/",
+            "http://www.baibrama.cult.cu/",
         ]
 
     def add_exception(self, exception):
