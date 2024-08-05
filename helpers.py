@@ -4,6 +4,8 @@ import re
 import os
 import time
 from tqdm import tqdm
+import rarfile
+import shutil
 
 exceptions = [
     "https://ayuda.uclv.edu.cu",
@@ -15,18 +17,27 @@ exceptions = [
     "?C=S;O=A",
     "/..",
     "..",
-    ''
+    "",
+    "avira",
+    "clamav",
+    "avast",
+    "segurmatica",
+    "update_all/",
+    "update_all_v10_to_v17/",
+    "Nod32_v10_to_v17.rar"
 ]
 
 filetypes = [".rar", ".exe", ".cvd"]
 
-# Reintenta cada 10 min 6 veces 
+
+# Reintenta cada 10 min 6 veces
 def connect(URLs):
     for i in range(6):
         online_url = getUrl(URLs)
-        if online_url != '':
+        if online_url != "":
             return online_url
         time.sleep(600)
+
 
 # Pending
 def sliceUrl(url):
@@ -138,33 +149,80 @@ def getHref(html, actual_url):
     print(href)
     return href
 
+# Función para limpiar la carpeta de destino
+def clear_directory(directory):
+    if os.path.exists(directory):
+        # Eliminar todo el contenido de la carpeta
+        shutil.rmtree(directory)
+    # Crear la carpeta de nuevo
+    os.makedirs(directory)
+
+# Limpiar la carpeta de destino
+# Funcion para descomprimir
+def unrar(rar):
+
+    # Ruta donde descomprimir
+    extract_path = "./Updates/Files"
+    print("Se va a extraer en: " + extract_path)
+    clear_directory(extract_path)
+    # Abrir el archivo .rar
+    with rarfile.RarFile(rar) as rf:
+        # Descomprimir todo el contenido
+        rf.extractall(path=extract_path)
+    
+
 
 # Descarga el contenido del URL
 # OK
 def download(href):
-
-    url, nombre = getType(href)
-
-    print("Descargando " + nombre + " ...")
-
+    # Desestructurando el enlace en nombre de archivo y url
+    url, archivo = getType(href)
+    print("Descargando " + archivo + " ...")
+    # Directorio de descargas, si no existe se crea
     directory = "./Updates/"
-
     if not os.path.exists(directory):
         os.makedirs(directory)
-    
-    response = requests.get(url, stream=True)
-    total_size = int(response.headers.get('content-length', 0))
+    resume_header = {}
+    # Comprobando que el archivo a descargar existe para reanudar la descarga
+    file_path = os.path.join(directory, "Nod32")
     block_size = 1024
-    with tqdm(total=total_size, unit='iB', unit_scale=True) as progress_bar:
-        with open(directory + nombre, "wb") as file:
-            for chunk in response.iter_content(chunk_size=block_size):
-                if chunk:
+    if os.path.exists(file_path):
+        resume_header["Range"] = f"bytes={os.path.getsize(file_path)}-"
+        print("Reanudando...")
+        response = requests.get(url, headers=resume_header, stream=True)
+        total_size = int(response.headers.get("content-length", 0)) + os.path.getsize(
+            file_path
+        )
+        with tqdm(
+            total=total_size,
+            initial=os.path.getsize(file_path),
+            unit="iB",
+            unit_scale=True,
+        ) as progress_bar:
+            mode = (
+                "ab" if os.path.exists(directory + "Nod32") else "wb"
+            )  # Append o Write
+            with open(file_path, "ab") as file:
+                for chunk in response.iter_content(chunk_size=block_size):
                     file.write(chunk)
                     progress_bar.update(len(chunk))
+        print(archivo + " descargado!!!")
+        unrar(file_path)
+        return
 
-    print(nombre + " descargado!!!")
+    response = requests.get(url, stream=True)
+    total_size = int(response.headers.get("content-length", 0))
+    with tqdm(total=total_size, unit="iB", unit_scale=True) as progress_bar:
+        with open(file_path, "wb") as file:
+            for chunk in response.iter_content(chunk_size=block_size):
+                file.write(chunk)
+                progress_bar.update(len(chunk))
+    print(archivo + " descargado!!!")
+    unrar(file_path)
+    return
 
-def upydate(online_url=[], count=0):
+
+def upydate(online_url=[]):
 
     if not online_url:
         return
@@ -172,9 +230,14 @@ def upydate(online_url=[], count=0):
     try:
         actual, mime_type = getType(online_url[0])
         print(mime_type)
-
-        if ".rar" in mime_type or ".exe" in mime_type or ".cvd" in mime_type:
+        found = False
+        for exception in exceptions:
+            if exception == online_url[0]:
+                found = True
+                break
+        if ".rar" in mime_type or "zip" in mime_type:
             download(online_url[0])
+            return 0
         else:
             # print("HTML!!")
             html = getHtml(actual)
@@ -185,4 +248,4 @@ def upydate(online_url=[], count=0):
         print("Error al verificar la URL " + actual)
 
     # Llamar recursivamente a la función con el resto de las URLs
-    upydate(online_url[1:], count + 1)
+    upydate(online_url[1:])
