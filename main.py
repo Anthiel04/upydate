@@ -1,17 +1,6 @@
 import helpers
 import time
 
-# import os
-# import config
-
-# config.load()
-
-# Enlaces de las actualizaciones
-URLs = [
-    "https://antivirus.uclv.cu/nod32/",
-    "http://ftp.uo.edu.cu/Antivirus/",
-]
-
-online_url = helpers.connect(URLs)
+online_url = helpers.connect(["https://antivirus.uclv.edu.cu/nod32/"])
 
 helpers.upydate([online_url])

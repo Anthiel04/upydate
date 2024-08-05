@@ -2,4 +2,3 @@ tqdm
 bs4
 requests
 rarfile
-shutil

@@ -1,3 +1,7 @@
 # Upydate
 
-### Cuando termina la ejecucion del programa imprime todos los enlaces que se usaron para descargar
+### Descarga de la actualizacion del antivirus desde repo cubanos
+### Ejecutar "sudo apt install rar"
+
+## Importante!
+### Cuando hay una descarga en progreso y no hay conexion a el repositorio intenta reanudar la descarga desde otro y provoca un error 
